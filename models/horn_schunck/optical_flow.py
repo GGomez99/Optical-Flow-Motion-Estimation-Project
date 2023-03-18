@@ -7,11 +7,7 @@ from utils.image_utils import *
 import warnings
 warnings.simplefilter('ignore')
 
-
-if torch.cuda.is_available:
-    DEVICE = torch.device('cuda')
-else:
-    DEVICE = torch.device('cpu')
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def estimate_derivatives(img1, img2):
     n_images, n_channels, _, _ = img1.shape
@@ -59,4 +55,4 @@ def compute_flow_seq(images):
         images (torch.Tensor) : (n_images, w, h)
     """
 
-    return horn_schunck(images[:-1], images[:1])[:, 0, :, :, :]
+    return horn_schunck(images[:-1], images[1:])[:, 0, :, :, :]
