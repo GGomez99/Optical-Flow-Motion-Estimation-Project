@@ -48,5 +48,5 @@ def process_all_masks(sequence_name, method_name, masks_path):
         mask_raw = cv2.imread(masks_path + method_name + "_" + sequence_name + '/%0*d.png' % (3, im), cv2.IMREAD_GRAYSCALE)
         contoured_img = find_and_fill_contour(mask_raw)
         img_closed = close(contoured_img, kernel_size=1, iter=2)
-        img_opened = close(img_closed, kernel_size=1, iter=2)
+        img_opened = open(img_closed, kernel_size=1, iter=2)
         cv2.imwrite(save_dir + '/%0*d.png' % (3, im), img_opened)
