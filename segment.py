@@ -1,23 +1,38 @@
 """
 Main file of the project, triggers the segmentation of the input images using the optical flow computations.
 """
+from pathlib import Path
 
 import fire
+import numpy as np
 import torch
 
 import matplotlib.pyplot as plt
-from utils.image_utils import load_image
+from skimage import io
+from tqdm import tqdm
 
+from utils.image_utils import load_image
+from utils.flow_utils_old import propagate_mask, flow_concatenation
 
 # def main(input_images_folder, first_mask_file, flow_file):
-def main(first_mask_file, flow_file):
-# def main(flow_file):
+def main(data_path: str, method_name: str, sequence: str):
     """
-    
+    Loads flows and first mask for a given sequence, then
     """
 
-    flows = torch.load(flow_file)
-    mask = load_image(first_mask_file).to(flows.device)
+    flows = torch.load(data_path + "/flows-outputs/" + method_name + "_"+sequence+"_flow.pt")
+    mask = load_image(data_path + "/sequences-train/" + sequence + "-001.png").to(flows.device)
+
+    if method_name.find("seq") != -1:
+        masks = old_seq_propagate(mask, flows)
+    elif method_name.find("direct") != -1:
+        masks = old_direct_propagate(mask, flows)
+    else:
+        raise "Method " + method_name + " not available !"
+
+    save_masks(masks, data_path + "/mask-outputs/" + method_name + "_" + sequence)
+
+    """
     _, h, w = mask.shape
 
     # flows = torch.zeros((3, 2, h, w))
@@ -28,8 +43,57 @@ def main(first_mask_file, flow_file):
 
     # plt.imshow(mask.permute(1, 2, 0).cpu().numpy())
     plt.imshow(output.permute(1, 2, 0).cpu().numpy())
-    plt.show()
+    plt.show()"""
 
+def save_masks(masks, output_path):
+    """
+    Saves all generated masks to corresponding path
+    :param masks: masks as numpy arrays
+    :param output_path: folder where to save them, while be automatically created if not existing
+    :return: None
+    """
+    Path(output_path).mkdir(parents=True, exist_ok=True)
+    print("Saving all generated masks to", output_path)
+    for idx, mask in tqdm(enumerate(masks)):
+        io.imsave(output_path + '/%0*d.png' % (3, idx+2), mask)
+
+def old_seq_propagate(first_mask, flows: torch.Tensor):
+    """
+    Generates segmentation masks based on given flow, using sequential propagation (unoptimal loops)
+    :param first_mask: initial segmentation mask
+    :param flows: flows from each frame to next frame
+    :return: all generated masks
+    """
+    flows = flows.permute(0, 2, 3, 1).cpu().numpy()
+    first_mask = first_mask.cpu().numpy()[0]
+    from_ref_flow = np.zeros(flows[0].shape)
+    all_masks = []
+
+    print("Propagating all segmentation masks using sequential method")
+    for flow in tqdm(flows):
+        from_ref_flow = flow_concatenation(flow, from_ref_flow)
+        propagation_mask = propagate_mask(from_ref_flow, first_mask)
+        all_masks.append(propagation_mask)
+
+    return all_masks
+
+def old_direct_propagate(first_mask, flows: torch.Tensor):
+    """
+    Generates segmentation masks based on given flow, using direct propagation (unoptimal loops)
+    :param first_mask: initial segmentation mask
+    :param flows: flows from init from to each frame
+    :return: all generated masks
+    """
+    flows = flows.permute(0, 2, 3, 1).cpu().numpy()
+    first_mask = first_mask.cpu().numpy()[0]
+    all_masks = []
+
+    print("Propagating all segmentation masks using direct method")
+    for flow in tqdm(flows):
+        propagation_mask = propagate_mask(flow, first_mask)
+        all_masks.append(propagation_mask)
+
+    return all_masks
 
 def compose(input, coords):
     """

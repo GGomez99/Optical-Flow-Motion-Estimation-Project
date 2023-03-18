@@ -1,6 +1,7 @@
 """
 Triggers the computation of optical flow on the given sequence of images.
 """
+from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -54,14 +55,13 @@ def visualization(img1, img2, flow, step=6, suffix=""):
 
     plt.show()
 
-def save_flow_imgs(input_folder, flows):
-    output_folder = os.path.join(input_folder, 'tmp/')  # Update this to the folder of your choice
-    if not os.path.isdir(output_folder):
-        os.mkdir(output_folder)
+def save_flow_imgs(output_path, flows, method_name):
+    output_folder = os.path.join(output_path, method_name)
+    Path(output_folder).mkdir(parents=True, exist_ok=True)
 
     flow_imgs = flow_to_image(flows).to('cpu')
     for i, img in enumerate(flow_imgs):
-        write_jpeg(img, output_folder + f"predicted_flow_{i}.jpg")
+        write_jpeg(img, output_folder + f"/predicted_flow_{i}.jpg")
 
 def compute_flow_and_save(images, output_path, flow_func=RAFT_compute_flow_seq):
     """
@@ -73,18 +73,31 @@ def compute_flow_and_save(images, output_path, flow_func=RAFT_compute_flow_seq):
 
     return flows
 
-def main(input_folder):
+def main(data_folder, sequence, method_name):
     """
-    
+    data_folder should be ./data
     """
 
-    images, grayscale_images = load_images_from_folder(input_folder, with_grayscale=True)
+    images, grayscale_images = load_images_from_folder(data_folder+"/sequences-train", sequence_name=sequence, with_grayscale=True)
     
-    # Compute flows
-    compute_flow_and_save(grayscale_images, os.path.join(input_folder, '..', 'HS_flow.pt'), HS_compute_flow_seq)
-    flows = compute_flow_and_save(images, os.path.join(input_folder, '..', 'RAFT_flow.pt'), RAFT_compute_flow_seq)
+    # Compute flow
+    if method_name == "seq-raft":
+        flows = compute_flow_and_save(
+            images,
+            output_path=os.path.join(data_folder, 'flows-outputs', "seq-raft_" + sequence + '_flow.pt'),
+            flow_func=RAFT_compute_flow_seq)
+    elif method_name == "seq-HS":
+        flows = compute_flow_and_save(
+            images,
+            output_path=os.path.join(data_folder, 'flows-outputs', "seq-HS_" + sequence + '_flow.pt'),
+            flow_func=HS_compute_flow_seq)
+    else:
+        raise "Method " + method_name + " not available"
 
-    save_flow_imgs(os.path.join(input_folder, '..'), flows / torch.norm(flows, dim=1, keepdim=True))
+    save_flow_imgs(
+        output_path=os.path.join(data_folder, 'flows-img-outputs'),
+        flows=flows / torch.norm(flows, dim=1, keepdim=True),
+        method_name=method_name+"_"+sequence)
 
     # flow_imgs = flow_to_image(RAFT_flow)
     # plt.imshow(flow_imgs[80].permute(1, 2, 0).detach().cpu().numpy())

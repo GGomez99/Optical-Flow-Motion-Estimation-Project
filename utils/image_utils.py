@@ -20,7 +20,7 @@ def load_image(image_path, grayscale=False):
         return TF.to_tensor(Image.open(image_path))
     
 
-def load_images_from_folder(folder_path, with_grayscale=False):
+def load_images_from_folder(folder_path, sequence_name, with_grayscale=False, image_type="bmp"):
     """
     Loads images found in the given folder.
 
@@ -28,17 +28,12 @@ def load_images_from_folder(folder_path, with_grayscale=False):
         folder_path (str) : Images root folder path
     """
 
-    exts = ('*.bmp', '*.png')
-
     images = []
-
-    for ext in exts:
-        img_paths = sorted(list(glob.glob(os.path.join(folder_path, ext))), key=lambda s: int(re.search(r'\d+', s).group()))
-        for img_file in img_paths:
-            images.append(TF.to_tensor(Image.open(img_file)))
+    img_paths = sorted(list(glob.glob(os.path.join(folder_path, sequence_name+"-*."+image_type))), key=lambda s: int(re.search(r'\d+', s).group()))
+    for img_file in img_paths:
+        images.append(TF.to_tensor(Image.open(img_file)))
 
     n_channels, h, w = images[0].shape # 3, w, h for RGB
-
     # Stack everything into one tensor
     output = torch.cat(images).to(DEVICE).reshape(-1, n_channels, h, w)
 
