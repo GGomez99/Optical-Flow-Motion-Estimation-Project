@@ -12,7 +12,8 @@ from skimage import io
 from tqdm import tqdm
 
 from utils.image_utils import load_image
-from utils.flow_utils_old import propagate_mask, flow_concatenation
+from utils.flow_utils_old import propagate_mask_parallel, flow_concatenation_parallel
+from utils.postprocess import process_single_mask
 
 # def main(input_images_folder, first_mask_file, flow_file):
 def main(data_path: str, method_name: str, sequence: str):
@@ -23,7 +24,10 @@ def main(data_path: str, method_name: str, sequence: str):
     flows = torch.load(data_path + "/flows-outputs/" + method_name + "_"+sequence+"_flow.pt")
     mask = load_image(data_path + "/sequences-train/" + sequence + "-001.png").to(flows.device)
 
-    if method_name.find("seq") != -1:
+    if method_name.find("seqpost") != -1:
+        # not used it sucks
+        masks = old_seq_propagate_with_postproc(mask, flows)
+    elif method_name.find("seq") != -1:
         masks = old_seq_propagate(mask, flows)
     elif method_name.find("direct") != -1:
         masks = old_direct_propagate(mask, flows)
@@ -71,9 +75,29 @@ def old_seq_propagate(first_mask, flows: torch.Tensor):
 
     print("Propagating all segmentation masks using sequential method")
     for flow in tqdm(flows):
-        from_ref_flow = flow_concatenation(flow, from_ref_flow)
-        propagation_mask = propagate_mask(from_ref_flow, first_mask)
+        from_ref_flow = flow_concatenation_parallel(flow, from_ref_flow)
+        propagation_mask = propagate_mask_parallel(from_ref_flow, first_mask)
         all_masks.append(propagation_mask)
+
+    return all_masks
+
+def old_seq_propagate_with_postproc(first_mask, flows: torch.Tensor):
+    """
+        Generates segmentation masks based on given flow, using sequential propagation and post process (unoptimal loops)
+        :param first_mask: initial segmentation mask
+        :param flows: flows from each frame to next frame
+        :return: all generated masks
+        """
+    flows = flows.permute(0, 2, 3, 1).cpu().numpy()
+    all_masks = []
+    previous_mask = first_mask.cpu().numpy()[0]
+
+    print("Propagating all segmentation masks using sequential method")
+    for flow in tqdm(flows):
+        next_mask = propagate_mask_parallel(flow, previous_mask)
+        next_mask = process_single_mask(next_mask)
+        all_masks.append(next_mask)
+        previous_mask = next_mask
 
     return all_masks
 
@@ -90,7 +114,7 @@ def old_direct_propagate(first_mask, flows: torch.Tensor):
 
     print("Propagating all segmentation masks using direct method")
     for flow in tqdm(flows):
-        propagation_mask = propagate_mask(flow, first_mask)
+        propagation_mask = propagate_mask_parallel(flow, first_mask)
         all_masks.append(propagation_mask)
 
     return all_masks

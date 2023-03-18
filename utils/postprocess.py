@@ -34,6 +34,11 @@ def find_and_fill_contour(img):
     contours, hierar = cv2.findContours(img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
     return cv2.drawContours(img, contours, -1, 255, thickness=cv2.FILLED)
 
+def process_single_mask(mask_img):
+    contoured_img = find_and_fill_contour(mask_img)
+    img_closed = close(contoured_img, kernel_size=1, iter=2)
+    img_opened = open(img_closed, kernel_size=1, iter=2)
+    return img_opened
 
 def process_all_masks(sequence_name, method_name, masks_path):
     # create directory to save files

@@ -17,6 +17,7 @@ from torchvision.utils import flow_to_image
 from torchvision.io import write_jpeg
 from models.horn_schunck.optical_flow import compute_flow_seq as HS_compute_flow_seq
 from models.raft.optical_flow import compute_flow_seq as RAFT_compute_flow_seq
+from models.raft.optical_flow import compute_flow_direct as RAFT_compute_flow_direct
 
 def draw_flow(img, flow, step):
     h, w = img.shape[:2]
@@ -82,17 +83,18 @@ def main(data_folder, sequence, method_name):
     
     # Compute flow
     if method_name == "seq-raft":
-        flows = compute_flow_and_save(
-            images,
-            output_path=os.path.join(data_folder, 'flows-outputs', "seq-raft_" + sequence + '_flow.pt'),
-            flow_func=RAFT_compute_flow_seq)
+        selected_flow_func = RAFT_compute_flow_seq
+    elif method_name == "direct-raft":
+        selected_flow_func = RAFT_compute_flow_direct
     elif method_name == "seq-HS":
-        flows = compute_flow_and_save(
-            images,
-            output_path=os.path.join(data_folder, 'flows-outputs', "seq-HS_" + sequence + '_flow.pt'),
-            flow_func=HS_compute_flow_seq)
+        selected_flow_func = HS_compute_flow_seq
     else:
         raise "Method " + method_name + " not available"
+
+    flows = compute_flow_and_save(
+        images,
+        output_path=os.path.join(data_folder, 'flows-outputs', method_name + "_" + sequence + '_flow.pt'),
+        flow_func=selected_flow_func)
 
     save_flow_imgs(
         output_path=os.path.join(data_folder, 'flows-img-outputs'),

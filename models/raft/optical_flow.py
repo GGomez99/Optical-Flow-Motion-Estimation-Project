@@ -78,3 +78,44 @@ def compute_flow_seq(images, batch_size=1):
     # Post-processing to retrieve original image sizes
     flows = postprocess(torch.cat(flows), h, w).to(DEVICE)
     return flows
+
+
+def compute_flow_direct(images, batch_size=1):
+    """
+    Computes the flow directly on the given image sequence.
+    RAFT model only accepts RGB images.
+
+    Args:
+        images (torch.Tensor) : (n_images, 3, h, w)
+        batch_size (int) : batch size for the RAFT inference model.
+    """
+
+    n_images, _, h, w = images.shape
+
+    # Preprocessing
+    preprocessed = preprocess(images)
+
+    # first image is always the same
+    img1 = torch.stack([preprocessed[0]] * (n_images-1)).to(DEVICE)
+    img2 = preprocessed[1:].to(DEVICE)
+    img1, img2 = TRANSFORMS(img1, img2)  # Computes RAFT preprocessing transformations
+
+    # Pushing model on device
+    model = raft_large(weights=WEIGHTS, progress=True).to(DEVICE)
+    # model = raft_small(weights=WEIGHTS, progress=True).to(DEVICE)
+    model = model.eval()
+
+    print("Processing", n_images, "images")
+    print("Batch size : ", batch_size)
+    flows = []
+    for i in tqdm(range(n_images // batch_size - 1), desc='RAFT'):
+        # Pushes results on CPU to have VRAM available for the rest of the inferences.
+        flows.append(model(img1[i*batch_size:(i+1)*batch_size], img2[i * batch_size:(i + 1) * batch_size],
+                           num_flow_updates=12)[-1].detach().cpu())
+
+    # Last batch
+    # flows.append(model(img1[(n_images // batch_size - 1) * batch_size:], img2[(n_images // batch_size - 1) * batch_size:], num_flow_updates=12)[-1].detach().cpu())
+
+    # Post-processing to retrieve original image sizes
+    flows = postprocess(torch.cat(flows), h, w).to(DEVICE)
+    return flows
