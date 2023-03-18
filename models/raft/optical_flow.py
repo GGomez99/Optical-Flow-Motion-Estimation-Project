@@ -65,8 +65,10 @@ def compute_flow_seq(images, batch_size=1):
     # model = raft_small(weights=WEIGHTS, progress=True).to(DEVICE)
     model = model.eval()
 
+    print("Processing", n_images, "images")
+    print("Batch size : ", batch_size)
     flows = []
-    for i in tqdm(range(n_images // batch_size - 2), desc='RAFT'):
+    for i in tqdm(range(n_images // batch_size - 1), desc='RAFT'):
         # Pushes results on CPU to have VRAM available for the rest of the inferences.
         flows.append(model(img1[i*batch_size:(i+1)*batch_size], img2[i*batch_size:(i+1)*batch_size], num_flow_updates=12)[-1].detach().cpu())
     
