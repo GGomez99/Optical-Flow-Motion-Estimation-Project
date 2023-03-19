@@ -24,15 +24,12 @@ def main(data_path: str, method_name: str, sequence: str):
     flows = torch.load(data_path + "/flows-outputs/" + method_name + "_"+sequence+"_flow.pt")
     mask = load_image(data_path + "/sequences-train/" + sequence + "-001.png").to(flows.device)
 
-    if method_name.find("seqpost") != -1:
-        # not used it sucks
-        masks = old_seq_propagate_with_postproc(mask, flows)
-    elif method_name.find("seq") != -1:
+    if method_name.find("seq") != -1:
         masks = old_seq_propagate(mask, flows)
     elif method_name.find("direct") != -1:
         masks = old_direct_propagate(mask, flows)
     else:
-        raise "Method " + method_name + " not available !"
+        raise Exception("Method " + method_name + " not available !")
 
     save_masks(masks, data_path + "/mask-outputs/" + method_name + "_" + sequence)
 
@@ -84,6 +81,7 @@ def old_seq_propagate(first_mask, flows: torch.Tensor):
 def old_seq_propagate_with_postproc(first_mask, flows: torch.Tensor):
     """
         Generates segmentation masks based on given flow, using sequential propagation and post process (unoptimal loops)
+        Do not use, this doesn't work
         :param first_mask: initial segmentation mask
         :param flows: flows from each frame to next frame
         :return: all generated masks

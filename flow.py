@@ -16,8 +16,12 @@ from utils.image_utils import load_images_from_folder
 from torchvision.utils import flow_to_image
 from torchvision.io import write_jpeg
 from models.horn_schunck.optical_flow import compute_flow_seq as HS_compute_flow_seq
+
 from models.raft.optical_flow import compute_flow_seq as RAFT_compute_flow_seq
 from models.raft.optical_flow import compute_flow_direct as RAFT_compute_flow_direct
+
+from models.farneback.optical_flow import compute_flow_seq as Fa_compute_flow_seq
+from models.farneback.optical_flow import compute_flow_direct as Fa_compute_flow_direct
 
 def draw_flow(img, flow, step):
     h, w = img.shape[:2]
@@ -82,14 +86,15 @@ def main(data_folder, sequence, method_name):
     images, grayscale_images = load_images_from_folder(data_folder+"/sequences-train", sequence_name=sequence, with_grayscale=True)
     
     # Compute flow
-    if method_name == "seq-raft":
-        selected_flow_func = RAFT_compute_flow_seq
-    elif method_name == "direct-raft":
-        selected_flow_func = RAFT_compute_flow_direct
-    elif method_name == "seq-HS":
+    is_sequential = method_name[:3] == "seq"
+    if method_name[method_name.find("-")+1:] == "raft":
+        selected_flow_func = RAFT_compute_flow_seq if is_sequential else RAFT_compute_flow_direct
+    elif method_name[method_name.find("-")+1:] == "HS":
         selected_flow_func = HS_compute_flow_seq
+    elif method_name[method_name.find("-")+1:] == "Fa":
+        selected_flow_func = Fa_compute_flow_seq if is_sequential else Fa_compute_flow_direct
     else:
-        raise "Method " + method_name + " not available"
+        raise Exception("Method " + method_name + " not available")
 
     flows = compute_flow_and_save(
         images,
