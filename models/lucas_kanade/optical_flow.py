@@ -1,9 +1,11 @@
 # Implements Lucas kanade algorithm but doesn't use tensors, needed for flow methods consistency
-import cv2
+# TODO gaussian blur
 import numpy as np
 import torch
 from numba import njit, prange
 from scipy.ndimage import convolve
+from skimage import filters
+from skimage.color import rgb2gray
 from tqdm import tqdm
 
 from utils.image_utils import *
@@ -13,6 +15,8 @@ import warnings
 warnings.simplefilter('ignore')
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+GAUSSIAN_SIGMA = 1.5
 
 def estimate_derivatives(img1, img2):
     kernelX = np.array([[-1, -1],[1, 1]])  # kernel for computing d/dx
@@ -54,10 +58,10 @@ def compute_flow_seq(images: torch.Tensor):
     """
     images = images.permute(0, 2, 3, 1).cpu().numpy()
 
-    previous_image = cv2.cvtColor(images[0], cv2.COLOR_RGB2GRAY)
+    previous_image = filters.gaussian(rgb2gray(images[0]), GAUSSIAN_SIGMA)
     flows = []
     for image in tqdm(images[1:], desc="Lucas-Kanade"):
-        current_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        current_image = filters.gaussian(rgb2gray(image), GAUSSIAN_SIGMA)
         fx, fy, ft = estimate_derivatives(previous_image, current_image)
         flows.append(lucas_kanade(previous_image, current_image, fx, fy, ft))
         previous_image = current_image
@@ -75,10 +79,10 @@ def compute_flow_direct(images: torch.Tensor):
     """
     images = images.permute(0, 2, 3, 1).cpu().numpy()
 
-    first_image = cv2.cvtColor(images[0], cv2.COLOR_RGB2GRAY)
+    first_image = filters.gaussian(rgb2gray(images[0]), GAUSSIAN_SIGMA)
     flows = []
     for image in tqdm(images[1:], desc="Farneback"):
-        current_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        current_image = filters.gaussian(rgb2gray(image), GAUSSIAN_SIGMA)
         flows.append(lucas_kanade(first_image, current_image))
 
     tensor_flows = torch.Tensor(flows)
