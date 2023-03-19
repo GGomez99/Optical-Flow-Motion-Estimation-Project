@@ -49,12 +49,14 @@ def compute_flow_direct(images: torch.Tensor):
     Args:
         images (torch.Tensor) : (n_images, w, h)
     """
-    first_image = images[0].cpu().numpy()
+    images = images.permute(0, 2, 3, 1).cpu().numpy()
+
+    first_image = cv2.cvtColor(images[0], cv2.COLOR_RGB2GRAY)
     flows = []
     for image in tqdm(images[1:], desc="Farneback"):
-        flows.append(farneback(first_image, image.cpu().numpy()))
+        current_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        flows.append(farneback(first_image, current_image))
 
     tensor_flows = torch.Tensor(flows)
-    print(tensor_flows.shape)
 
-    return tensor_flows
+    return tensor_flows.permute(0, 3, 1, 2)

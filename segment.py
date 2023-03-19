@@ -81,7 +81,7 @@ def old_seq_propagate(first_mask, flows: torch.Tensor):
 def old_seq_propagate_with_postproc(first_mask, flows: torch.Tensor):
     """
         Generates segmentation masks based on given flow, using sequential propagation and post process (unoptimal loops)
-        Do not use, this doesn't work
+        DO NOT USE, this works but produces huge drift errors
         :param first_mask: initial segmentation mask
         :param flows: flows from each frame to next frame
         :return: all generated masks

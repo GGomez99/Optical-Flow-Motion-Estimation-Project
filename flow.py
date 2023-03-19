@@ -23,6 +23,9 @@ from models.raft.optical_flow import compute_flow_direct as RAFT_compute_flow_di
 from models.farneback.optical_flow import compute_flow_seq as Fa_compute_flow_seq
 from models.farneback.optical_flow import compute_flow_direct as Fa_compute_flow_direct
 
+from models.lucas_kanade.optical_flow import compute_flow_seq as LK_compute_flow_seq
+from models.lucas_kanade.optical_flow import compute_flow_direct as LK_compute_flow_direct
+
 def draw_flow(img, flow, step):
     h, w = img.shape[:2]
     y, x = np.mgrid[step/2:h:step, step/2:w:step].reshape(2,-1).astype(int)
@@ -61,6 +64,11 @@ def visualization(img1, img2, flow, step=6, suffix=""):
     plt.show()
 
 def save_flow_imgs(output_path, flows, method_name):
+
+    # LK visualization doesn't work for some reason
+    if method_name.find("LK") != -1:
+        return
+
     output_folder = os.path.join(output_path, method_name)
     Path(output_folder).mkdir(parents=True, exist_ok=True)
 
@@ -93,6 +101,8 @@ def main(data_folder, sequence, method_name):
         selected_flow_func = HS_compute_flow_seq
     elif method_name[method_name.find("-")+1:] == "Fa":
         selected_flow_func = Fa_compute_flow_seq if is_sequential else Fa_compute_flow_direct
+    elif method_name[method_name.find("-")+1:] == "LK":
+        selected_flow_func = LK_compute_flow_seq if is_sequential else LK_compute_flow_direct
     else:
         raise Exception("Method " + method_name + " not available")
 
