@@ -55,4 +55,13 @@ def compute_flow_seq(images):
         images (torch.Tensor) : (n_images, w, h)
     """
 
-    return horn_schunck(images[:-1], images[1:])[:, 0, :, :, :]
+    return horn_schunck(images[:-1], images[1:])[:, 0, :, :, :].permute(0, 3, 1, 2)
+
+def compute_flow_direct(images):
+    """
+    Computes the flow directly on the given image sequence.
+
+    Args:
+        images (torch.Tensor) : (n_images, w, h)
+    """
+    return horn_schunck(torch.stack([images[0]] * (images.shape[0]-1)).to(DEVICE), images[1:])[:, 0, :, :, :].permute(0, 3, 1, 2)

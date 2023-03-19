@@ -2,7 +2,6 @@
 import cv2
 import numpy as np
 import torch
-import torch.nn.functional as F
 from tqdm import tqdm
 
 from utils.image_utils import *
@@ -29,12 +28,12 @@ def compute_flow_seq(images: torch.Tensor):
     Args:
         images (torch.Tensor) : (n_images, w, h)
     """
-    images = images.permute(0, 2, 3, 1).cpu().numpy()
+    images = images.permute(0, 2, 3, 1)[:, :, :, 0].cpu().numpy()
 
-    previous_image = cv2.cvtColor(images[0], cv2.COLOR_RGB2GRAY)
+    previous_image = images[0]
     flows = []
     for image in tqdm(images[1:], desc="Farneback"):
-        current_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        current_image = image
         flows.append(farneback(previous_image, current_image))
         previous_image = current_image
 
@@ -49,12 +48,12 @@ def compute_flow_direct(images: torch.Tensor):
     Args:
         images (torch.Tensor) : (n_images, w, h)
     """
-    images = images.permute(0, 2, 3, 1).cpu().numpy()
+    images = images.permute(0, 2, 3, 1)[:, :, :, 0].cpu().numpy()
 
-    first_image = cv2.cvtColor(images[0], cv2.COLOR_RGB2GRAY)
+    first_image = images[0]
     flows = []
     for image in tqdm(images[1:], desc="Farneback"):
-        current_image = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+        current_image = image
         flows.append(farneback(first_image, current_image))
 
     tensor_flows = torch.Tensor(flows)
