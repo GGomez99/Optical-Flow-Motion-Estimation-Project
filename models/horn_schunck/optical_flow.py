@@ -47,7 +47,7 @@ def horn_schunck(img1, img2, lambda_=0.025, Niter=200):
         
     return torch.stack((v, u), dim=-1)
 
-def compute_flow_seq(images, batch_size=30):
+def compute_flow_seq(images, batch_size=20):
     """
     Computes the flow sequentially on the given image sequence.
 
@@ -71,7 +71,7 @@ def compute_flow_seq(images, batch_size=30):
 
     return torch.cat(flows).permute(0, 3, 1, 2)
 
-def compute_flow_direct(images, batch_size=30):
+def compute_flow_direct(images, batch_size=20):
     """
     Computes the flow directly on the given image sequence.
 

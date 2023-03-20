@@ -5,9 +5,9 @@ import torchvision.transforms.functional as F
 from tqdm import tqdm
 
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# DEVICE = torch.device('cpu')
+#DEVICE = torch.device('cpu')
 WEIGHTS = Raft_Large_Weights.DEFAULT
-# WEIGHTS = Raft_Small_Weights.DEFAULT
+#WEIGHTS = Raft_Small_Weights.DEFAULT
 TRANSFORMS = WEIGHTS.transforms()
 
 def preprocess(images):
@@ -62,7 +62,7 @@ def compute_flow_seq(images, batch_size=1):
 
     # Pushing model on device
     model = raft_large(weights=WEIGHTS, progress=True).to(DEVICE)
-    # model = raft_small(weights=WEIGHTS, progress=True).to(DEVICE)
+    #model = raft_small(weights=WEIGHTS, progress=True).to(DEVICE)
     model = model.eval()
 
     print("Processing", n_images, "images")
@@ -102,7 +102,7 @@ def compute_flow_direct(images, batch_size=1):
 
     # Pushing model on device
     model = raft_large(weights=WEIGHTS, progress=True).to(DEVICE)
-    # model = raft_small(weights=WEIGHTS, progress=True).to(DEVICE)
+    #model = raft_small(weights=WEIGHTS, progress=True).to(DEVICE)
     model = model.eval()
 
     print("Processing", n_images, "images")

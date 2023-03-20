@@ -115,12 +115,16 @@ def main(data_folder, sequence, method_name):
         images,
         output_path=os.path.join(data_folder, 'flows-outputs', method_name + "_" + sequence + '_flow.pt'),
         flow_func=selected_flow_func)
+    try:
+        save_flow_imgs(
+            output_path=os.path.join(data_folder, 'flows-img-outputs'),
+            flows=flows / torch.norm(flows, dim=1, keepdim=True),
+            method_name=method_name+"_"+sequence)
+    except Exception as e:
+        print("Couldn't save flows")
+        print(e)
 
-    save_flow_imgs(
-        output_path=os.path.join(data_folder, 'flows-img-outputs'),
-        flows=flows / torch.norm(flows, dim=1, keepdim=True),
-        method_name=method_name+"_"+sequence)
-
+    torch.cuda.empty_cache()
     # flow_imgs = flow_to_image(RAFT_flow)
     # plt.imshow(flow_imgs[80].permute(1, 2, 0).detach().cpu().numpy())
     # plt.show()

@@ -32,7 +32,7 @@ def main(data_path: str, method_name: str, sequence: str):
         raise Exception("Method " + method_name + " not available !")
 
     save_masks(masks, data_path + "/mask-outputs/" + method_name + "_" + sequence)
-
+    torch.cuda.empty_cache()
     """
     _, h, w = mask.shape
 
@@ -55,7 +55,7 @@ def save_masks(masks, output_path):
     """
     Path(output_path).mkdir(parents=True, exist_ok=True)
     print("Saving all generated masks to", output_path)
-    for idx, mask in tqdm(enumerate(masks)):
+    for idx, mask in enumerate(masks):
         io.imsave(output_path + '/%0*d.png' % (3, idx+2), mask)
 
 def old_seq_propagate(first_mask, flows: torch.Tensor):
