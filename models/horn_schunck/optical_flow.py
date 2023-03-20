@@ -36,7 +36,7 @@ def horn_schunck(img1, img2, lambda_=0.025, Niter=200):
 
     normalization_term =  1 / (fx**2 + fy**2 + lambda_)
     
-    for it in tqdm(range(Niter), desc='Horn-Schunck'):
+    for it in range(Niter):
         u_mean = conv2d(u, kernel_mean)
         v_mean = conv2d(v, kernel_mean)
 
@@ -47,21 +47,51 @@ def horn_schunck(img1, img2, lambda_=0.025, Niter=200):
         
     return torch.stack((v, u), dim=-1)
 
-def compute_flow_seq(images):
+def compute_flow_seq(images, batch_size=30):
     """
     Computes the flow sequentially on the given image sequence.
 
     Args:
         images (torch.Tensor) : (n_images, w, h)
     """
+    n_images, n_channels, h, w = images.shape
 
-    return horn_schunck(images[:-1], images[1:])[:, 0, :, :, :].permute(0, 3, 1, 2)
+    img1 = images[:-1].to(DEVICE)
+    img2 = images[1:].to(DEVICE)
 
-def compute_flow_direct(images):
+    flows = []
+    for i in tqdm(range(n_images // batch_size - 1), desc='Horn_Schunck'):
+        # Pushes results on CPU to have VRAM available for the rest of the inferences.
+        flows.append(horn_schunck(img1[i * batch_size:(i + 1) * batch_size],
+                                  img2[i * batch_size:(i + 1) * batch_size])[:, 0, :, :, :].detach().cpu())
+
+    # Last batch
+    flows.append(horn_schunck(img1[(n_images // batch_size - 1) * batch_size:],
+                              img2[(n_images // batch_size - 1) * batch_size:])[:, 0, :, :, :].detach().cpu())
+
+    return torch.cat(flows).permute(0, 3, 1, 2)
+
+def compute_flow_direct(images, batch_size=30):
     """
     Computes the flow directly on the given image sequence.
 
     Args:
         images (torch.Tensor) : (n_images, w, h)
     """
-    return horn_schunck(torch.stack([images[0]] * (images.shape[0]-1)).to(DEVICE), images[1:])[:, 0, :, :, :].permute(0, 3, 1, 2)
+    n_images, n_channels, h, w = images.shape
+
+    img1 = torch.stack([images[0]] * (images.shape[0]-1)).to(DEVICE)
+    img2 = images[1:].to(DEVICE)
+
+    flows = []
+    for i in tqdm(range(n_images // batch_size - 1), desc='Horn_Schunck'):
+        # Pushes results on CPU to have VRAM available for the rest of the inferences.
+        flows.append(
+            horn_schunck(img1[i * batch_size:(i + 1) * batch_size],
+                         img2[i * batch_size:(i + 1) * batch_size])[:, 0, :, :, :].detach().cpu())
+
+    # Last batch
+    flows.append(horn_schunck(img1[(n_images // batch_size - 1) * batch_size:],
+                              img2[(n_images // batch_size - 1) * batch_size:])[:, 0, :, :, :].detach().cpu())
+
+    return torch.cat(flows).permute(0, 3, 1, 2)
