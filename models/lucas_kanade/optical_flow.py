@@ -82,7 +82,8 @@ def compute_flow_direct(images: torch.Tensor):
     flows = []
     for image in tqdm(images[1:], desc="Farneback"):
         current_image = filters.gaussian(image, GAUSSIAN_SIGMA)
-        flows.append(lucas_kanade(first_image, current_image))
+        fx, fy, ft = estimate_derivatives(first_image, current_image)
+        flows.append(lucas_kanade(first_image, current_image, fx, fy, ft))
 
     tensor_flows = torch.Tensor(flows)
 
