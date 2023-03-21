@@ -10,7 +10,6 @@ warnings.simplefilter('ignore')
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def estimate_derivatives(img1, img2):
-    n_images, n_channels, _, _ = img1.shape
 
     kernelX = torch.tensor([[-1, -1],[1, 1]], device=DEVICE)*.25  # kernel for computing d/dx
     kernelY = torch.tensor([[-1, 1],[ -1, 1]], device=DEVICE)*.25 # kernel for computing d/dy
@@ -24,7 +23,6 @@ def estimate_derivatives(img1, img2):
     return fx, fy, ft
 
 def horn_schunck(img1, img2, lambda_=0.025, Niter=200):
-    n_images, n_channels, _, _ = img1.shape
 
     kernel_mean = torch.tensor([[1./12,1./6,1./12],[1./6,0,1./6], [1./12,1./6,1./12]], device=DEVICE)
     

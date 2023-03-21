@@ -7,7 +7,7 @@ from tqdm import tqdm
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 #DEVICE = torch.device('cpu')
 WEIGHTS = Raft_Large_Weights.DEFAULT
-#WEIGHTS = Raft_Small_Weights.DEFAULT
+#WEIGHTS = Raft_Small_Weights.DEFAULT # Uncomment to use small model
 TRANSFORMS = WEIGHTS.transforms()
 
 def preprocess(images):
@@ -62,7 +62,7 @@ def compute_flow_seq(images, batch_size=1):
 
     # Pushing model on device
     model = raft_large(weights=WEIGHTS, progress=True).to(DEVICE)
-    #model = raft_small(weights=WEIGHTS, progress=True).to(DEVICE)
+    #model = raft_small(weights=WEIGHTS, progress=True).to(DEVICE)  # Uncomment to use small model
     model = model.eval()
 
     print("Processing", n_images, "images")
@@ -102,7 +102,7 @@ def compute_flow_direct(images, batch_size=1):
 
     # Pushing model on device
     model = raft_large(weights=WEIGHTS, progress=True).to(DEVICE)
-    #model = raft_small(weights=WEIGHTS, progress=True).to(DEVICE)
+    #model = raft_small(weights=WEIGHTS, progress=True).to(DEVICE)  # Uncomment to use small model
     model = model.eval()
 
     print("Processing", n_images, "images")
@@ -114,7 +114,7 @@ def compute_flow_direct(images, batch_size=1):
                            num_flow_updates=12)[-1].detach().cpu())
 
     # Last batch
-    # flows.append(model(img1[(n_images // batch_size - 1) * batch_size:], img2[(n_images // batch_size - 1) * batch_size:], num_flow_updates=12)[-1].detach().cpu())
+    flows.append(model(img1[(n_images // batch_size - 1) * batch_size:], img2[(n_images // batch_size - 1) * batch_size:], num_flow_updates=12)[-1].detach().cpu())
 
     # Post-processing to retrieve original image sizes
     flows = postprocess(torch.cat(flows), h, w).to(DEVICE)
