@@ -11,18 +11,12 @@ pip install -r requirements.txt
 In this repository, we used the Horn and Schunk, Farneback, Lucas-Kanade and Raft models in order to compute the optical flow of an image sequence and then propagate a mask to perform object detection.
 You can find these three models in the `models` folder.
 
-We have the following files:
-- `flow.py` that computes the optical flows for a given image sequence.
-- `segment.py` that performs the mask propagation with the direct and sequential method.
-- `main processing.ipynb` which is the main files and perform all the computation.
-- Finally, `results scoring.py` to compute the results for the sequences.
-
 ## Folder structure
-Put every images (including original images, and first mask) inside `data/sequences-train`.
-If you want to compute the metrics, all the masks are required, not only the first one.
+Put every images (including original images, and masks) inside `data/sequences-train`. <br />
+Only the first mask is required to perform the mask integration, however, all the masks should be included when computing the metrics.
 
-## How to use
-Using the `flow.py`, one can compute the mask propagation for any sequence of images.
+## Flow computation
+Using the `flow.py`, one can compute optical flow for any sequence of images.
 
 ```
 python flow.py ./data <sequence name> <method name>
@@ -46,3 +40,10 @@ Example for computing the octopus mask propagation using a sequential integratio
 ```
 python flow.py ./data octopus seq-Fa
 ```
+
+## Internal file structure
+We have the following files:
+- `flow.py` that computes the optical flows for a given image sequence.
+- `segment.py` that performs the mask propagation with the direct and sequential method.
+- `main processing.ipynb` which is a notebook file aggregating flow computation, mask integration, and post processing. One should probably start by this file to experiment with this repository.
+- Finally, `results scoring.py` to compute the results for the sequences.
