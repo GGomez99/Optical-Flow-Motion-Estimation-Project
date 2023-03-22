@@ -26,16 +26,31 @@ python flow.py ./data <sequence name> <method name>
 `<method name>` referes to the name of the method, available methods are as follows :
 | Method name  | Optical flow method description |
 | ------------- | ------------- |
-| `raft`  | Direct integration with RAFT method  |
-| `HS`  | Direct integration with Horn-Schunck method  |
-| `Fa`  | Direct integration with Farneback method  |
-| `LK`  | Direct integration with Lucas-Kanade method  |
+| `direct-raft`  | Direct integration with RAFT method  |
+| `direct-HS`  | Direct integration with Horn-Schunck method  |
+| `direct-Fa`  | Direct integration with Farneback method  |
+| `direct-LK`  | Direct integration with Lucas-Kanade method  |
 | `seq-raft`  | Sequential integration with RAFT method  |
 | `seq-HS`  | Sequential integration with Horn-Schunck method  |
 | `seq-Fa`  | Sequential integration with Farneback method  |
 | `seq-LK`  | Sequential integration with Lucas-Kanade method  |
 
-### Usage example
+
+---
+_When the flow computation is done, the flows are saved in `data/flows-output`. This is compatible with other algorithm in this repo, which will look for the flows in the latter. You shouldn't change anything when using the whole mask integration pipeline end-to-end._
+
+## Mask integration
+Using the `segment.py`, one can integrate the segmentation mask, effectively segmenting the whole sequence.
+
+```
+python segment.py ./data <sequence name> <method name>
+```
+
+See table in the flow computation for different method names.
+
+__Note__ : In order to perform mask segmentation, one should first compute the optical flow of the sequence (see section above).
+
+## Usage example
 Example for computing the octopus mask propagation using a sequential integration with Farneback algorithm:
 ```
 python flow.py ./data octopus seq-Fa
