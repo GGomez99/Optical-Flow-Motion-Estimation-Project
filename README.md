@@ -39,7 +39,9 @@ python flow.py ./data <sequence name> <method name>
 
 
 ---
-_When the flow computation is done, the flows are saved in `data/flows-output`. This is compatible with other algorithm in this repo, which will look for the flows in the latter. You shouldn't change anything when using the whole mask integration pipeline end-to-end._
+_When the flow computation is done, the flows are saved in `data/flows-output`. This is compatible with other algorithms in this repo, which will look for the flows in the latter. You shouldn't change anything when using the whole mask integration pipeline end-to-end._
+<br />
+__In order to visualize the flow, image representations are also saved in `data/flows-img-outputs`.__
 
 ## Mask integration
 Using the `segment.py`, one can integrate the segmentation mask, effectively segmenting the whole sequence.
@@ -51,6 +53,19 @@ python segment.py ./data <sequence name> <method name>
 See table in the flow computation for different method names.
 
 __Note__ : In order to perform mask segmentation, one should first compute the optical flow of the sequence (see section above).
+
+---
+_When the segmentation masks are computed, they are saved in `data/mask-output`._
+
+## Post-processing
+The post-processing code can be found in `utils/postprocess.py`.
+See project presentation (slides) for more information about the post-processing. In a few words, it consists on avoiding masks residues using image erosion, and closing cracks in the masks using image dilatation.
+
+## Process everything at once
+A convenience notebook is provided in `main processing.ipynb` that can be used to compute the flow computation and mask integration at once. Results are computed in another notebook, see following section.
+
+## Results & scoring
+The code for aggregating results, after having computed everything (flows, mask integration, and post-processing. See sections above), can be found in the `results scoring.ipynb` notebook file.
 
 ## Usage example
 Example for computing the octopus mask propagation using a sequential integration with Farneback algorithm:
