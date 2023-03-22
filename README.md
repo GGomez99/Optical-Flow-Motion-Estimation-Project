@@ -61,21 +61,23 @@ _When the segmentation masks are computed, they are saved in `data/mask-output`.
 The post-processing code can be found in `utils/postprocess.py`.
 See project presentation (slides) for more information about the post-processing. In a few words, it consists on avoiding masks residues using image erosion, and closing cracks in the masks using image dilatation.
 
-## Process everything at once
+## Process everything at once (notebook)
 A convenience notebook is provided in `main processing.ipynb` that can be used to compute the flow computation and mask integration at once. Results are computed in another notebook, see following section.
 
-## Results & scoring
+## Results & scoring (notebook)
 The code for aggregating results, after having computed everything (flows, mask integration, and post-processing. See sections above), can be found in the `results scoring.ipynb` notebook file.
 
 ## Usage example
-Example for computing the octopus mask propagation using a sequential integration with Farneback algorithm:
+Example for computing the octopus flow computation using a sequential integration with Farneback algorithm:
 ```
 python flow.py ./data octopus seq-Fa
 ```
 
-## Internal file structure
-We have the following files:
-- `flow.py` that computes the optical flows for a given image sequence.
-- `segment.py` that performs the mask propagation with the direct and sequential method.
-- `main processing.ipynb` which is a notebook file aggregating flow computation, mask integration, and post processing. One should probably start by this file to experiment with this repository.
-- Finally, `results scoring.py` to compute the results for the sequences.
+<br />
+Example for computing the swan mask propagation using a direct integration with Horn-Schunck algorithm:
+
+```
+python segment.py ./data swan direct-raft
+```
+
+General use-cases can be found in the different notebooks (see sections above)
