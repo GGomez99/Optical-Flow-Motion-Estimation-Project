@@ -2,6 +2,8 @@
 
 ## Setup
 
+We recommend you to setup a python (conda) environment for this repository. Once in the environment, this repository requirements are installed using :
+
 ```
 pip install -r requirements.txt
 ```
