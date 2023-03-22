@@ -78,26 +78,8 @@ def compute_flow_seq(images, batch_size=1):
     # Post-processing to retrieve original image sizes
     flows = postprocess(torch.cat(flows), h, w).to(DEVICE)
     return flows
-
-
-def get_optimal_batch_size(h, w, n_images):
-    """
-    Computes the optimal batch_size using the available VRAM to maximize GPU usage.
-    """
-
-    if torch.cuda.is_available():
-        t = torch.cuda.get_device_properties(0).total_memory
-        r = torch.cuda.memory_reserved(0)
-        a = torch.cuda.memory_allocated(0)
-        f = (r-a)/(1024*8)  # free inside reserved in MiB
-    else:
-        return 1 # CPU is sequential anyway
-
-    needed = 847 * (h * w / 102480)
-    return max(1, min(int(f // needed), n_images))
-
     
-def compute_flow_direct(images, batch_size=None):
+def compute_flow_direct(images, batch_size=1):
     """
     Computes the flow directly on the given image sequence.
     RAFT model only accepts RGB images.
@@ -108,12 +90,6 @@ def compute_flow_direct(images, batch_size=None):
     """
 
     n_images, _, h, w = images.shape
-
-    if batch_size is None:
-        if torch.cuda.is_available():
-            print("Automatically computed batch size based on available VRAM")
-
-        batch_size = get_optimal_batch_size(h, w, n_images)
 
     # Preprocessing
     preprocessed = preprocess(images)
@@ -127,7 +103,7 @@ def compute_flow_direct(images, batch_size=None):
     model = raft_large(weights=WEIGHTS, progress=True).to(DEVICE)
     #model = raft_small(weights=WEIGHTS, progress=True).to(DEVICE)  # Uncomment to use small model
     model = model.eval()
-
+    
     print("Processing", n_images, "images")
     print("Batch size : ", batch_size)
     flows = []
