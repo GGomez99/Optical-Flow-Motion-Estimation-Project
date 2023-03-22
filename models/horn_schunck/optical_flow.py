@@ -10,6 +10,9 @@ warnings.simplefilter('ignore')
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def estimate_derivatives(img1, img2):
+    """
+    Estimates the spatial derivatives of the given images independantly, and the temporal derivative between the two images.
+    """
 
     kernelX = torch.tensor([[-1, -1],[1, 1]], device=DEVICE)*.25  # kernel for computing d/dx
     kernelY = torch.tensor([[-1, 1],[ -1, 1]], device=DEVICE)*.25 # kernel for computing d/dy
@@ -23,6 +26,14 @@ def estimate_derivatives(img1, img2):
     return fx, fy, ft
 
 def horn_schunck(img1, img2, lambda_=0.025, Niter=200):
+    """
+    Computes the optical flow using the horn-schunck method.
+    This function is batchified.
+
+    Args:
+        img1 (torch.Tensor) : (batch_size, 3, h, w)
+        img2 (torch.Tensor) : (batch_size, 3, h, w)
+    """
 
     kernel_mean = torch.tensor([[1./12,1./6,1./12],[1./6,0,1./6], [1./12,1./6,1./12]], device=DEVICE)
     
