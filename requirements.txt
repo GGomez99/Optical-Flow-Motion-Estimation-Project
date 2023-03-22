@@ -1,0 +1,9 @@
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch
+
+numba
+torchvision
+numpy
+opencv-python
+fire
+scipy
