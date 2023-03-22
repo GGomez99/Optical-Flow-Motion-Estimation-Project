@@ -80,7 +80,24 @@ def compute_flow_seq(images, batch_size=1):
     return flows
 
 
-def compute_flow_direct(images, batch_size=1):
+def get_optimal_batch_size(h, w):
+    """
+    Computes the optimal batch_size using the available VRAM to maximize GPU usage.
+    """
+
+    if torch.cuda.is_available():
+        t = torch.cuda.get_device_properties(0).total_memory
+        r = torch.cuda.memory_reserved(0)
+        a = torch.cuda.memory_allocated(0)
+        f = (r-a)/(1000*8)  # free inside reserved in Mo
+    else:
+        return 1 # CPU is sequential anyway
+
+    needed = 2096 * (h * w / 102480)
+    return max(1, int(f // needed))
+
+    
+def compute_flow_direct(images, batch_size=None):
     """
     Computes the flow directly on the given image sequence.
     RAFT model only accepts RGB images.
@@ -92,6 +109,12 @@ def compute_flow_direct(images, batch_size=1):
 
     n_images, _, h, w = images.shape
 
+    if batch_size is None:
+        if torch.cuda.is_available():
+            print("Automatically computed batch size based on available VRAM")
+            
+        batch_size = get_optimal_batch_size(h, w)
+
     # Preprocessing
     preprocessed = preprocess(images)
 
@@ -99,6 +122,7 @@ def compute_flow_direct(images, batch_size=1):
     img1 = torch.stack([preprocessed[0]] * (n_images-1)).to(DEVICE)
     img2 = preprocessed[1:].to(DEVICE)
     img1, img2 = TRANSFORMS(img1, img2)  # Computes RAFT preprocessing transformations
+    n_images = n_images - 1 # We are considering pairs of images
 
     # Pushing model on device
     model = raft_large(weights=WEIGHTS, progress=True).to(DEVICE)
@@ -110,11 +134,11 @@ def compute_flow_direct(images, batch_size=1):
     flows = []
     for i in tqdm(range(n_images // batch_size - 1), desc='RAFT'):
         # Pushes results on CPU to have VRAM available for the rest of the inferences.
-        flows.append(model(img1[i*batch_size:(i+1)*batch_size], img2[i * batch_size:(i + 1) * batch_size],
+        flows.append(model(img1[i*batch_size:(i+1)*batch_size], img2[i * batch_size:(i+1) * batch_size],
                            num_flow_updates=12)[-1].detach().cpu())
 
     # Last batch
-    #flows.append(model(img1[(n_images // batch_size - 1) * batch_size:], img2[(n_images // batch_size - 1) * batch_size:], num_flow_updates=12)[-1].detach().cpu())
+    flows.append(model(img1[(n_images // batch_size - 1) * batch_size:], img2[(n_images // batch_size - 1) * batch_size:], num_flow_updates=12)[-1].detach().cpu())
 
     # Post-processing to retrieve original image sizes
     flows = postprocess(torch.cat(flows), h, w).to(DEVICE)
