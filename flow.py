@@ -95,17 +95,18 @@ def main(data_folder, sequence, method_name):
     color_images, grayscale_images = load_images_from_folder(data_folder+"/sequences-train", sequence_name=sequence, with_grayscale=True)
     
     # Compute flow
-    is_sequential = method_name[:3] == "seq"
-    if method_name[method_name.find("-")+1:] == "raft":
+    integration_method, flow_method = method_name.split("-")
+    is_sequential = integration_method == "seq" # Otherwise, should be "direct"
+    if flow_method == "raft":
         selected_flow_func = RAFT_compute_flow_seq if is_sequential else RAFT_compute_flow_direct
         images = color_images
-    elif method_name[method_name.find("-")+1:] == "HS":
+    elif flow_method == "HS":
         selected_flow_func = HS_compute_flow_seq if is_sequential else HS_compute_flow_direct
         images = grayscale_images
-    elif method_name[method_name.find("-")+1:] == "Fa":
+    elif flow_method == "Fa":
         selected_flow_func = Fa_compute_flow_seq if is_sequential else Fa_compute_flow_direct
         images = grayscale_images
-    elif method_name[method_name.find("-")+1:] == "LK":
+    elif flow_method == "LK":
         selected_flow_func = LK_compute_flow_seq if is_sequential else LK_compute_flow_direct
         images = grayscale_images
     else:
