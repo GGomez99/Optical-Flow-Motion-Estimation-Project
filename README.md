@@ -9,7 +9,7 @@ pip install -r requirements.txt
 ## Content of the repository
 
 In this repository, we used the Horn and Schunk, Farneback, Lucas-Kanade and Raft models in order to compute the optical flow of an image sequence and then propagate a mask to perform object detection.
-You can find these three models in the `models` folder.
+You can find these models in the `models` folder.
 
 ## Folder structure
 Put every images (including original images, and masks) inside `data/sequences-train`. <br />
