@@ -114,7 +114,7 @@ def compute_flow_direct(images, batch_size=1):
                            num_flow_updates=12)[-1].detach().cpu())
 
     # Last batch
-    flows.append(model(img1[(n_images // batch_size - 1) * batch_size:], img2[(n_images // batch_size - 1) * batch_size:], num_flow_updates=12)[-1].detach().cpu())
+    #flows.append(model(img1[(n_images // batch_size - 1) * batch_size:], img2[(n_images // batch_size - 1) * batch_size:], num_flow_updates=12)[-1].detach().cpu())
 
     # Post-processing to retrieve original image sizes
     flows = postprocess(torch.cat(flows), h, w).to(DEVICE)
